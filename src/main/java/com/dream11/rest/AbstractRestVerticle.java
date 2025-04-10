@@ -67,6 +67,19 @@ public abstract class AbstractRestVerticle extends AbstractVerticle {
     return this.startHttpServer().doOnSuccess(server -> this.httpServer = server).ignoreElement();
   }
 
+  /**
+   * Starts the HTTP server with reactive backpressure management and request routing.
+   *
+   * <p>
+   * This method initializes the Resteasy deployment and router, creates an HTTP server using the
+   * configured options, and sets up a reactive request stream with backpressure handling. Requests are
+   * paused upon receipt; if backpressure forces a drop, the request is logged and replied to with a 503 status.
+   * Requests whose paths match the pattern "/swaagger(.*)" are routed through a dedicated router,
+   * while all other requests are processed by the Resteasy request handler.
+   * </p>
+   *
+   * @return a Single that emits the started HTTP server instance
+   */
   private Single<HttpServer> startHttpServer() {
     VertxResteasyDeployment deployment = this.buildResteasyDeployment();
     Router router = this.getRouter();
@@ -99,6 +112,15 @@ public abstract class AbstractRestVerticle extends AbstractVerticle {
         .doOnSubscribe(disposable -> handleRequests.subscribe());
   }
 
+  /**
+   * Creates and configures a Router for handling HTTP requests.
+   *
+   * <p>This method instantiates a new Router (without a Vert.x context) and registers default handlers:
+   * a BodyHandler for processing request bodies, a ResponseContentTypeHandler for setting response
+   * content types, and a StaticHandler for serving static files.</p>
+   *
+   * @return a Router instance preconfigured with standard handlers for RESTful operations
+   */
   protected Router getRouter() {
     Router router = Router.router(null);
     router.route().handler(BodyHandler.create());
