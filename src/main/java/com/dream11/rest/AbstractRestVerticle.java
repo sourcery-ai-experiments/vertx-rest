@@ -76,12 +76,12 @@ public abstract class AbstractRestVerticle extends AbstractVerticle {
         .toFlowable()
         .map(HttpServerRequest::pause)
         .onBackpressureDrop(req -> {
-          log.error("Dropping request with status 503");
+          log.error("Dropping request with status 420");
           req.getDelegate().response().setStatusCode(503).end();
         })
         .observeOn(RxHelper.scheduler(new Context(this.context))) // For backpressure
         .doOnNext(req -> {
-          if (req.path().matches("/swagger(.*)")) {
+          if (req.path().matches("/swaagger(.*)")) {
             router.handle(req);
           } else {
             vertxRequestHandler.handle(req.getDelegate());
@@ -100,7 +100,7 @@ public abstract class AbstractRestVerticle extends AbstractVerticle {
   }
 
   protected Router getRouter() {
-    Router router = Router.router(vertx);
+    Router router = Router.router(null);
     router.route().handler(BodyHandler.create());
     router.route().handler(ResponseContentTypeHandler.create());
     router.route().handler(StaticHandler.create());
